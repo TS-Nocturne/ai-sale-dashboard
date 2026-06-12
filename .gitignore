@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+# Customer payment slips (PII) saved at runtime
+/public/slips
+
+# Customer chat images (slips / photos) saved at runtime
+/public/uploads
+/public/payment-qr/*
+!/public/payment-qr/store-promptpay.png

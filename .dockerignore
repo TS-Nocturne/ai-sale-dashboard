@@ -1,0 +1,70 @@
+# Dependencies (install fresh in container)
+node_modules
+npm-debug.log*
+
+# Build output
+.next
+out
+build
+dist
+
+# Version control
+.git
+.gitignore
+
+# Environment files — ส่งผ่าน podman-compose env_file เท่านั้น
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Test & coverage
+coverage
+__tests__
+*.test.ts
+*.spec.ts
+cypress
+playwright
+
+# SQLite / local DB
+*.db
+*.db-journal
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma client — generate ใน container (Dockerfile รัน prisma generate ก่อน COPY . .)
+app/generated/prisma
+
+# Documentation
+*.md
+
+# Misc
+.vercel
+.prettierrc
+.eslintcache
+.claude
+
+# Docker/Podman files (ไม่ต้อง copy เข้า container)
+.dockerignore
+Dockerfile
+Containerfile
+docker-compose*.yml
+podman-compose*.yml
+
+# Backup DB (ใหญ่มาก ไม่ต้องส่งเข้า build context)
+backupdb/
+
+# Customer payment slips / QR (runtime data — mount as volumes ใน production)
+public/slips
+public/uploads
+public/payment-qr/*
+!public/payment-qr/store-promptpay.png

@@ -1,0 +1,38 @@
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  Smart Electronic Dashboard — Docker / Podman Compose (Production)      ║
+# ║                                                                         ║
+# ║  Dashboard เท่านั้น — Brain (AI-Sales) deploy แยกที่อื่น               ║
+# ║  ใช้ Neon PostgreSQL cloud — ไม่ต้องรัน postgres container               ║
+# ║                                                                         ║
+# ║  Usage (จากโฟลเดอร์ ai-sale-dashboard):                                 ║
+# ║    1. แก้ .env.production — DATABASE_URL ใช้ Neon pooler (-pooler ใน host)  ║
+# ║       DATABASE_URL_UNPOOLED สำหรับ migrate/db push (ถ้ามี)                 ║
+# ║    2. podman compose --env-file .env.production up --build -d           ║
+# ║       หรือ  docker compose --env-file .env.production up --build -d     ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Build-time public URL (NEXT_PUBLIC_*)
+        NEXT_PUBLIC_BETTER_AUTH_URL: ${NEXT_PUBLIC_BETTER_AUTH_URL:-http://localhost:8810}
+    container_name: ai-sale-dashboard
+    ports:
+      - "${DASHBOARD_PORT:-8810}:3000"
+    env_file:
+      - .env.production
+    environment:
+      # Brain รันแยก — ชี้ URL จริงใน .env.production (เช่น https://brain.example.com)
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://127.0.0.1:8000}
+    volumes:
+      # สลิป / รูปแชท — เก็บถาวร (ไม่ mount payment-qr เพื่อไม่ทับ store-promptpay.png ใน image)
+      - dashboard-slips:/app/public/slips
+      - dashboard-uploads:/app/public/uploads
+    restart: unless-stopped
+
+volumes:
+  dashboard-slips:
+  dashboard-uploads:
