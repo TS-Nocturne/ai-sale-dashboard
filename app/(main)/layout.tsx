@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { Sidebar } from "@/app/(main)/_components/sidebar"
 import { MobileAppShell } from "@/app/(main)/_components/mobile-app-shell"
+import { UserRolesProvider } from "@/app/(main)/_components/user-roles-context"
 import { employeeMayAccess, isEmployeeOnly, parseRoles } from "@/lib/roles"
 
 export default async function MainLayout({
@@ -27,11 +28,13 @@ export default async function MainLayout({
     }
 
     return (
-        <div className="flex h-dvh max-h-dvh flex-col bg-background">
-            <div className="flex min-h-0 flex-1">
-                <Sidebar />
-                <MobileAppShell>{children}</MobileAppShell>
+        <UserRolesProvider roles={roles}>
+            <div className="flex h-dvh max-h-dvh flex-col bg-background">
+                <div className="flex min-h-0 flex-1">
+                    <Sidebar />
+                    <MobileAppShell>{children}</MobileAppShell>
+                </div>
             </div>
-        </div>
+        </UserRolesProvider>
     )
 }

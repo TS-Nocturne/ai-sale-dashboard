@@ -3,15 +3,11 @@
 import { Header } from "./header"
 import { MobileBottomNav } from "./mobile-bottom-nav"
 import { getMobileNavItems, shouldShowMobileBottomNav } from "./sidebar/sidebar-data"
-import { useSession } from "@/lib/auth-client"
+import { useUserRoles } from "@/app/(main)/_components/user-roles-context"
 import { cn } from "@/lib/utils"
 
 export function MobileAppShell({ children }: { children: React.ReactNode }) {
-    const { data: session } = useSession()
-
-    const userRoles = ((session?.user as { role?: string })?.role || "user")
-        .split(",")
-        .map((r) => r.trim())
+    const userRoles = useUserRoles()
 
     const showMobileNav = shouldShowMobileBottomNav(userRoles)
     const mobileNavItems = getMobileNavItems(userRoles)

@@ -1,12 +1,15 @@
 "use client"
 
+import { useState } from "react"
+import { authClient, useSession } from "@/lib/auth-client"
+import { useUserRoles } from "@/app/(main)/_components/user-roles-context"
+import { ProfileAvatarUpload } from "@/app/(main)/_components/profile/ProfileAvatarUpload"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
     Select,
@@ -21,12 +24,68 @@ import {
     Shield,
     Building2,
     Save,
-    Upload,
     Key,
     AlertTriangle,
+    Loader2,
+    CheckCircle,
+    AlertCircle,
 } from "lucide-react"
 
 export default function SettingsContent() {
+    const { data: session, isPending } = useSession()
+    const userRoles = useUserRoles()
+    const topRole = userRoles.includes("admin")
+        ? "admin"
+        : userRoles.includes("manager")
+          ? "manager"
+          : userRoles.includes("employee")
+            ? "employee"
+            : "user"
+
+    const [name, setName] = useState("")
+    const [nameInitialized, setNameInitialized] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [success, setSuccess] = useState("")
+    const [error, setError] = useState("")
+
+    if (session && !nameInitialized) {
+        setName(session.user?.name || "")
+        setNameInitialized(true)
+    }
+
+    const handleSaveProfile = async () => {
+        if (!name.trim()) {
+            setError("กรุณากรอกชื่อ")
+            return
+        }
+        setSaving(true)
+        setError("")
+        setSuccess("")
+        try {
+            const res = await authClient.updateUser({ name: name.trim() })
+            if (res.error) {
+                setError(res.error.message || "เกิดข้อผิดพลาด")
+            } else {
+                setSuccess("บันทึกโปรไฟล์สำเร็จ")
+                setTimeout(() => setSuccess(""), 3000)
+            }
+        } catch {
+            setError("เกิดข้อผิดพลาดในการบันทึก")
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    if (isPending) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+            </div>
+        )
+    }
+
+    if (!session) return null
+
     return (
         <div className="space-y-6">
             <div>
@@ -62,48 +121,65 @@ export default function SettingsContent() {
                             <CardDescription>อัปเดตข้อมูลโปรไฟล์และรูปภาพ</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {/* Avatar */}
-                            <div className="flex items-center gap-4">
-                                <Avatar className="h-16 w-16">
-                                    <AvatarImage src="" />
-                                    <AvatarFallback className="text-lg">จบ</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <Button variant="outline" size="sm" className="gap-2">
-                                        <Upload className="h-4 w-4" />
-                                        อัปโหลดรูป
-                                    </Button>
-                                    <p className="mt-1 text-xs text-muted-foreground">PNG, JPG ขนาดไม่เกิน 2MB</p>
-                                </div>
-                            </div>
+                            <ProfileAvatarUpload
+                                name={session.user.name}
+                                image={session.user.image}
+                            />
 
                             <Separator />
 
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="p-name">ชื่อ-นามสกุล</Label>
-                                    <Input id="p-name" defaultValue="เจ้าของแบรนด์" />
+                                    <Input
+                                        id="p-name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="p-email">อีเมล</Label>
-                                    <Input id="p-email" type="email" defaultValue="owner@example.com" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="p-phone">เบอร์โทร</Label>
-                                    <Input id="p-phone" placeholder="08X-XXX-XXXX" />
+                                    <Input
+                                        id="p-email"
+                                        type="email"
+                                        value={session.user.email}
+                                        disabled
+                                        className="cursor-not-allowed bg-muted text-muted-foreground"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>บทบาท</Label>
                                     <div className="flex h-9 items-center">
-                                        <Badge>Admin</Badge>
+                                        <Badge className="uppercase">{topRole}</Badge>
                                     </div>
                                 </div>
                             </div>
 
+                            {error && (
+                                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                                    <AlertCircle className="h-4 w-4 shrink-0" />
+                                    {error}
+                                </div>
+                            )}
+                            {success && (
+                                <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-600 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                    <CheckCircle className="h-4 w-4 shrink-0" />
+                                    {success}
+                                </div>
+                            )}
+
                             <div className="flex justify-end">
-                                <Button className="gap-2">
-                                    <Save className="h-4 w-4" />
-                                    บันทึกการเปลี่ยนแปลง
+                                <Button
+                                    className="gap-2"
+                                    disabled={saving}
+                                    onClick={handleSaveProfile}
+                                >
+                                    {saving ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Save className="h-4 w-4" />
+                                    )}
+                                    {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
                                 </Button>
                             </div>
                         </CardContent>

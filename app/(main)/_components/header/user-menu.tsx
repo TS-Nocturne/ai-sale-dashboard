@@ -12,11 +12,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { useSession, signOut } from "@/lib/auth-client"
+import { useUserRoles } from "@/app/(main)/_components/user-roles-context"
+import { canOpenSettings } from "@/lib/nav-access"
 import { LogOut, User, Settings } from "lucide-react"
 
 export function UserMenu() {
     const { data: session } = useSession()
+    const userRoles = useUserRoles()
     const router = useRouter()
+    const showSettings = canOpenSettings(userRoles)
 
     const userName = session?.user?.name ?? "User"
     const userEmail = session?.user?.email ?? ""
@@ -29,11 +33,14 @@ export function UserMenu() {
         .toUpperCase()
         .slice(0, 2)
 
-    const handleSignOut = async () => {
-        await signOut({
+    const handleSignOut = () => {
+        void signOut({
             fetchOptions: {
                 onSuccess: () => {
-                    router.push("/auth/signin")
+                    window.location.href = "/auth/signin"
+                },
+                onError: () => {
+                    window.location.href = "/auth/signin"
                 },
             },
         })
@@ -58,18 +65,23 @@ export function UserMenu() {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+                <DropdownMenuItem onSelect={() => router.push("/profile")}>
                     <User className="mr-2 h-4 w-4" />
                     โปรไฟล์
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    ตั้งค่า
-                </DropdownMenuItem>
+                {showSettings && (
+                    <DropdownMenuItem onSelect={() => router.push("/dashboard/settings")}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        ตั้งค่า
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="text-destructive focus:text-destructive"
+                    variant="destructive"
+                    onSelect={(e) => {
+                        e.preventDefault()
+                        void handleSignOut()
+                    }}
                 >
                     <LogOut className="mr-2 h-4 w-4" />
                     ออกจากระบบ

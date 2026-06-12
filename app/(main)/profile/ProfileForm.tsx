@@ -13,7 +13,7 @@ import {
     Eye,
     EyeOff,
 } from "lucide-react"
-import Image from "next/image"
+import { ProfileAvatarUpload } from "@/app/(main)/_components/profile/ProfileAvatarUpload"
 
 export default function ProfileForm() {
     const { data: session, isPending } = useSession()
@@ -100,8 +100,6 @@ export default function ProfileForm() {
 
     if (!session) return null
 
-    const initials = (session.user?.name || "U")
-        .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     const userRole = (session.user as { role?: string })?.role || "user"
 
     return (
@@ -114,20 +112,11 @@ export default function ProfileForm() {
                 </h2>
 
                 {/* Avatar + Info */}
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border">
-                    {session.user?.image ? (
-                        <Image
-                            src={session.user.image}
-                            alt="Avatar"
-                            width={64}
-                            height={64}
-                            className="w-16 h-16 rounded-full ring-2 ring-purple-200 dark:ring-purple-800"
-                        />
-                    ) : (
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center ring-2 ring-purple-200 dark:ring-purple-800">
-                            <span className="text-xl font-bold text-white">{initials}</span>
-                        </div>
-                    )}
+                <div className="mb-6 pb-6 border-b border-border space-y-4">
+                    <ProfileAvatarUpload
+                        name={session.user?.name || "User"}
+                        image={session.user?.image}
+                    />
                     <div>
                         <p className="text-base font-semibold text-foreground">{session.user?.name}</p>
                         <p className="text-sm text-muted-foreground">{session.user?.email}</p>

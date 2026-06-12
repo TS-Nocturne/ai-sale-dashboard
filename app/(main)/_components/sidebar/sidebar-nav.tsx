@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useSession } from "@/lib/auth-client"
+import { useUserRoles } from "@/app/(main)/_components/user-roles-context"
+import { canOpenSettings, filterSidebarSections } from "@/lib/nav-access"
 import { sidebarData, bottomNavItems } from "./sidebar-data"
 import { NavSection } from "./nav-section"
 import { NavItem } from "./nav-item"
@@ -21,17 +22,10 @@ export function SidebarNav({
     onNavigate,
     className,
 }: SidebarNavProps) {
-    const { data: session } = useSession()
+    const userRoles = useUserRoles()
 
-    const userRoles = ((session?.user as { role?: string })?.role || "user")
-        .split(",")
-        .map((r) => r.trim())
-
-    const filteredSections = sidebarData.filter(
-        (section) =>
-            !section.allowedRoles ||
-            section.allowedRoles.some((r) => userRoles.includes(r))
-    )
+    const filteredSections = filterSidebarSections(sidebarData, userRoles)
+    const showBottomSettings = canOpenSettings(userRoles)
 
     return (
         <div className={cn("flex h-full flex-col", className)}>
@@ -71,14 +65,15 @@ export function SidebarNav({
 
                     <div className="mt-6 border-t border-border pt-4">
                         <nav className="space-y-1">
-                            {bottomNavItems.map((item) => (
-                                <NavItem
-                                    key={item.href}
-                                    item={item}
-                                    collapsed={collapsed}
-                                    onNavigate={onNavigate}
-                                />
-                            ))}
+                            {showBottomSettings &&
+                                bottomNavItems.map((item) => (
+                                    <NavItem
+                                        key={item.href}
+                                        item={item}
+                                        collapsed={collapsed}
+                                        onNavigate={onNavigate}
+                                    />
+                                ))}
                         </nav>
                     </div>
                 </div>

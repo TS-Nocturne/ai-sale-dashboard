@@ -7,24 +7,18 @@ import { sidebarData, bottomNavItems } from "../sidebar/sidebar-data"
 import { SidebarNav } from "../sidebar/sidebar-nav"
 import { UserMenu } from "./user-menu"
 import { ImpersonationBanner } from "./impersonation-banner"
-import { useSession } from "@/lib/auth-client"
+import { useUserRoles } from "@/app/(main)/_components/user-roles-context"
+import { canOpenSettings, filterSidebarSections } from "@/lib/nav-access"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 
 export function Header() {
     const pathname = usePathname()
-    const { data: session } = useSession()
+    const userRoles = useUserRoles()
     const [mobileOpen, setMobileOpen] = useState(false)
 
-    const userRoles = ((session?.user as { role?: string })?.role || "user")
-        .split(",")
-        .map((r) => r.trim())
-
-    const visibleSections = sidebarData.filter(
-        (section) =>
-            !section.allowedRoles ||
-            section.allowedRoles.some((r) => userRoles.includes(r))
-    )
+    const visibleSections = filterSidebarSections(sidebarData, userRoles)
+    const showBottomSettings = canOpenSettings(userRoles)
 
     const pageTitles: Record<string, string> = {
         "/profile": "โปรไฟล์ของฉัน",
@@ -33,7 +27,7 @@ export function Header() {
 
     const allItems = [
         ...visibleSections.flatMap((section) => section.items),
-        ...bottomNavItems,
+        ...(showBottomSettings ? bottomNavItems : []),
     ]
     const matched = allItems.find((item) =>
         item.href === "/dashboard"

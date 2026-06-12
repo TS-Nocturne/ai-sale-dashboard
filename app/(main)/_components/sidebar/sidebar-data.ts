@@ -82,7 +82,7 @@ export const sidebarData: NavSectionType[] = [
         items: [
             { title: "ตั้งค่า", href: "/dashboard/settings", icon: Shield },
         ],
-        allowedRoles: ["manager"],
+        allowedRoles: ["admin", "manager"],
     },
 ]
 
