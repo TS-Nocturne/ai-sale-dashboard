@@ -32,6 +32,8 @@ export interface AgentResponse {
     overpay_resolution: string | null
     overpay_credit_amount: number
     awaiting_refund_approval: boolean
+    handoff_requested: boolean
+    handoff_reason: string | null
 }
 
 export interface ChatAcceptedResponse {

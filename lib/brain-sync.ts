@@ -65,6 +65,25 @@ export async function applyBrainResult(
     await syncOrder(conversationId, result)
     await syncOverpayFromBrain(conversationId, result)
 
+    if (result.handoff_requested) {
+        const reason =
+            result.handoff_reason?.trim() || "ลูกค้าขอคุยกับเจ้าหน้าที่"
+        await prisma.chatThread.upsert({
+            where: { id: conversationId },
+            create: {
+                id: conversationId,
+                botStatus: "PAUSED_FOR_HUMAN",
+                handoffReason: reason,
+                pausedAt: new Date(),
+            },
+            update: {
+                botStatus: "PAUSED_FOR_HUMAN",
+                handoffReason: reason,
+                pausedAt: new Date(),
+            },
+        })
+    }
+
     const cancelUnpaid = shouldCancelUnpaidOrders({
         customerMessage: options?.customerMessage,
         pipelineStage: result.pipeline_stage,
